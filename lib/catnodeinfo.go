@@ -208,14 +208,16 @@ func newCatNodeInfo(fields []string, indexLine string) (catNode *CatNodeInfo, er
 // cat output is used.
 // NOTE: if you include the name field, make sure it is the last field in the
 // list, because name values can contain spaces which screw up the parsing
-func (c *Conn) GetCatNodeInfo(fields []string) (catNodes []CatNodeInfo, err error) {
+func (c *Conn) GetCatNodeInfo(fields []string, params map[string]interface{}) (catNodes []CatNodeInfo, err error) {
 
 	catNodes = make([]CatNodeInfo, 0)
 
 	// If no fields have been specified, use the "default" arrangement
 	if len(fields) < 1 {
-		fields = []string{"host", "ip", "heap.percent", "ram.percent", "load",
-			"node.role", "master", "name"}
+		fields = []string{
+			"host", "ip", "heap.percent", "ram.percent", "load",
+			"node.role", "master", "name",
+		}
 	}
 
 	// Issue a request for stats on the requested fields
@@ -223,6 +225,15 @@ func (c *Conn) GetCatNodeInfo(fields []string) (catNodes []CatNodeInfo, err erro
 		"bytes": "b",
 		"h":     strings.Join(fields, ","),
 	}
+
+	if params != nil {
+		for k,v := range params {
+			if k != "" && v != nil {
+				args[k] = v
+			}
+		}
+	}
+
 	indices, err := c.DoCommand("GET", "/_cat/nodes/", args, nil)
 	if err != nil {
 		return catNodes, err
